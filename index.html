@@ -88,9 +88,60 @@
       box-shadow: var(--shadow);
       overflow: hidden;
     }
-
-    .panel-body { padding: 18px; }
-
+    
+    .panel-body {
+      padding: 18px;
+    }
+    
+    .condition-panel {
+      position: sticky;
+      top: 16px;
+      max-height: calc(100vh - 32px);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .condition-panel .panel-body {
+      overflow: auto;
+      padding-bottom: 0;
+    }
+    
+    .condition-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    .condition-grid .field {
+      margin-bottom: 0;
+    }
+    
+    .span-2 {
+      grid-column: 1 / -1;
+    }
+    
+    .fixed-action-area {
+      position: sticky;
+      bottom: 0;
+      z-index: 8;
+      margin: 18px -18px 0;
+      padding: 12px 18px 16px;
+      background: linear-gradient(
+        180deg,
+        rgba(230,238,201,0.72),
+        rgba(230,238,201,0.96)
+      );
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+    
+    .fixed-action-area .btn-row {
+      margin-top: 0;
+    }
+    
+    .fixed-action-area .btn-row + .btn-row {
+      margin-top: 10px;
+    }
     .panel-title {
       font-size: 20px;
       font-weight: 950;
@@ -296,6 +347,27 @@
     .toast.show { display: block; }
 
     @media (max-width: 920px) {
+      .condition-panel {
+        position: static;
+        max-height: none;
+      }
+      
+      .condition-panel .panel-body {
+        overflow: visible;
+      }
+      
+      .condition-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .span-2 {
+        grid-column: auto;
+      }
+      
+      .fixed-action-area {
+        position: sticky;
+        bottom: 0;
+      }
       main { grid-template-columns: 1fr; }
       .summary-cards { grid-template-columns: repeat(2, 1fr); }
       .member-list { max-height: none; min-height: 260px; }
@@ -326,22 +398,24 @@
   </header>
 
   <main>
-    <section class="panel">
+    <section class="panel condition-panel">
       <div class="panel-body">
         <div class="panel-title">發送條件</div>
 
-        <div class="field">
-          <label>Apps Script Web App URL</label>
-          <input id="apiUrl" placeholder="https://script.google.com/macros/s/AKfycbzktlfKqb0_HjAv4oPr0RSwC8onKAJX22VxNWW3fn6ldHyvfytj80W0sfgkPSxYhi8NSQ/exec" />
-        </div>
-
-        <div class="field">
-          <label>管理金鑰 adminKey</label>
-          <input id="adminKey" placeholder="例如 crewcrew2026" type="password" />
+        <div class="condition-grid">
+          <div class="field span-2">
+            <label>Apps Script Web App URL</label>
+            <input id="apiUrl" placeholder="https://script.google.com/macros/s/你的部署ID/exec" />
+          </div>
+        
+          <div class="field span-2">
+            <label>管理金鑰 adminKey</label>
+            <input id="adminKey" placeholder="例如 crewcrew2026" type="password" />
+          </div>
         </div>
 
         <div class="section-title">會員篩選</div>
-        <div class="grid-2">
+          <div class="condition-grid">
           <div class="field">
             <label>累計金額大於等於</label>
             <input id="minAmount" type="number" min="0" placeholder="例如 1000" />
@@ -369,40 +443,48 @@
         </div>
 
         <div class="section-title">優惠訊息</div>
-        <div class="field">
-          <label>優惠標題</label>
-          <input id="couponTitle" value="好膽賣早專屬優惠" />
-        </div>
-        <div class="field">
-          <label>發送文字</label>
-          <textarea id="message">感謝支持好膽賣早，本週憑此訊息享飲品折扣 10 元！</textarea>
-        </div>
-        <div class="grid-2">
+
+        <div class="condition-grid">
+          <div class="field span-2">
+            <label>優惠標題</label>
+            <input id="couponTitle" value="好膽賣早專屬優惠" />
+          </div>
+        
+          <div class="field span-2">
+            <label>發送文字</label>
+            <textarea id="message">感謝支持好膽賣早，本週憑此訊息享飲品折扣 10 元！</textarea>
+          </div>
+        
           <div class="field">
             <label>兌換按鈕文字</label>
             <input id="buttonLabel" value="兌換優惠" />
           </div>
-        </div>
-        <div class="field">
-          <label>兌換頁網址 / LIFF URL</label>
-          <input id="redeemUrl" placeholder="例如 https://liff.line.me/你的LIFFID 或 GitHub Pages 兌換頁" />
-        </div>
-        <div class="field">
-          <label>效期文字</label>
-          <input id="expireText" placeholder="例如 使用期限：2026/05/31 前" />
+        
+          <div class="field">
+            <label>效期文字</label>
+            <input id="expireText" placeholder="例如 使用期限：2026/05/31 前" />
+          </div>
+        
+          <div class="field span-2">
+            <label>兌換頁網址 / LIFF URL</label>
+            <input id="redeemUrl" placeholder="例如 https://liff.line.me/你的LIFFID 或 GitHub Pages 兌換頁" />
+          </div>
         </div>
 
         <div class="section-title">LINE 預覽</div>
         <div class="preview-box" id="previewBox"></div>
 
+        <div class="fixed-action-area">
         <div class="btn-row">
           <button class="secondary-btn" onclick="loadMembers()">查詢會員</button>
           <button class="primary-btn" onclick="sendSelectedCoupons()">發送給勾選會員</button>
         </div>
+      
         <div class="btn-row">
           <button class="secondary-btn" onclick="saveSettings()">儲存設定</button>
           <button class="danger-btn" onclick="clearSelected()">取消勾選</button>
         </div>
+      </div>
       </div>
     </section>
 
