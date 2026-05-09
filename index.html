@@ -332,7 +332,7 @@
 
         <div class="field">
           <label>Apps Script Web App URL</label>
-          <input id="apiUrl" placeholder="https://script.google.com/macros/s/AKfycbwDOLkROkEIgb-BQ85aU7QpysOG2Hb0Um5HPsb0uwDokJ2B64Erhsv9VfrsLL-XRAoPPQ/exec" />
+          <input id="apiUrl" placeholder="https://script.google.com/macros/s/AKfycbzktlfKqb0_HjAv4oPr0RSwC8onKAJX22VxNWW3fn6ldHyvfytj80W0sfgkPSxYhi8NSQ/exec" />
         </div>
 
         <div class="field">
@@ -381,10 +381,6 @@
           <div class="field">
             <label>兌換按鈕文字</label>
             <input id="buttonLabel" value="兌換優惠" />
-          </div>
-          <div class="field">
-            <label>優惠代碼</label>
-            <input id="couponCode" value="DRINK10" />
           </div>
         </div>
         <div class="field">
@@ -447,7 +443,7 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbwDOLkROkEIgb-BQ85aU7QpysOG2Hb0Um5HPsb0uwDokJ2B64Erhsv9VfrsLL-XRAoPPQ/exec';
+    const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbzktlfKqb0_HjAv4oPr0RSwC8onKAJX22VxNWW3fn6ldHyvfytj80W0sfgkPSxYhi8NSQ/exec';
 
     let members = [];
     let selectedKeys = new Set();
@@ -459,7 +455,6 @@
       document.getElementById('redeemUrl').value = saved.redeemUrl || '';
       document.getElementById('couponTitle').value = saved.couponTitle || '好膽賣早專屬優惠';
       document.getElementById('buttonLabel').value = saved.buttonLabel || '兌換優惠';
-      document.getElementById('couponCode').value = saved.couponCode || 'DRINK10';
       document.getElementById('expireText').value = saved.expireText || '';
       document.getElementById('message').value = saved.message || '感謝支持好膽賣早，本週憑此訊息享飲品折扣 10 元！';
       bindPreviewInputs();
@@ -468,7 +463,7 @@
     }
 
     function bindPreviewInputs() {
-      ['couponTitle','message','buttonLabel','couponCode','expireText','redeemUrl'].forEach(id => {
+      ['couponTitle','message','buttonLabel','expireText','redeemUrl'].forEach(id => {
         document.getElementById(id).addEventListener('input', updatePreview);
       });
     }
@@ -480,7 +475,6 @@
         redeemUrl: val('redeemUrl'),
         couponTitle: val('couponTitle'),
         buttonLabel: val('buttonLabel'),
-        couponCode: val('couponCode'),
         expireText: val('expireText'),
         message: val('message')
       };
@@ -491,15 +485,13 @@
     function updatePreview() {
       const title = val('couponTitle') || '好膽賣早專屬優惠';
       const message = val('message') || '';
-      const code = val('couponCode') || '';
       const expire = val('expireText') || '';
       const button = val('buttonLabel') || '兌換優惠';
-
+    
       document.getElementById('previewBox').textContent =
         title + '\n\n' +
         message +
-        (code ? '\n\n優惠代碼：' + code : '') +
-        (expire ? '\n' + expire : '') +
+        (expire ? '\n\n' + expire : '') +
         '\n\n[' + button + ']';
     }
 
@@ -572,12 +564,13 @@
     }
 
     function normalizeMember(m) {
-      const key = m.memberKey || m.lineUserId || m.phone || m.customerPhone || m.name || Math.random().toString(36).slice(2);
+      const lineUserId = String(m.lineUserId || m.lineUserID || '').trim();
+    
       return {
-        key: String(key),
+        key: lineUserId,
         name: m.name || m.customerName || '未命名',
         phone: m.phone || m.customerPhone || '',
-        lineUserId: m.lineUserId || m.lineUserID || '',
+        lineUserId: lineUserId,
         lineDisplayName: m.lineDisplayName || m.lineName || '',
         orderCount: Number(m.orderCount || m.count || 0),
         totalAmount: Number(m.totalAmount || m.amount || 0),
@@ -632,9 +625,13 @@
 
     function toggleAll(checked) {
       selectedKeys.clear();
+    
       if (checked) {
-        members.filter(m => m.lineUserId).forEach(m => selectedKeys.add(m.key));
+        members
+          .filter(m => m.lineUserId)
+          .forEach(m => selectedKeys.add(m.lineUserId));
       }
+    
       renderMembers();
     }
 
@@ -659,7 +656,6 @@
         message: val('message'),
         couponTitle: val('couponTitle'),
         buttonLabel: val('buttonLabel'),
-        couponCode: val('couponCode'),
         redeemUrl: val('redeemUrl'),
         expireText: val('expireText')
       };
