@@ -72,11 +72,11 @@
     }
 
     main {
-      max-width: 1180px;
+      max-width: 1360px;
       margin: 22px auto;
       padding: 0 16px 40px;
       display: grid;
-      grid-template-columns: 360px minmax(0, 1fr);
+      grid-template-columns: 360px minmax(0, 1fr) 190px;
       gap: 16px;
       align-items: start;
     }
@@ -120,21 +120,39 @@
       grid-column: 1 / -1;
     }
     
-    .fixed-action-area {
+    .action-panel {
       position: sticky;
-      bottom: 0;
-      z-index: 8;
-      margin: 18px -18px 0;
-      padding: 12px 18px 16px;
-      background: linear-gradient(
-        180deg,
-        rgba(230,238,201,0.72),
-        rgba(230,238,201,0.96)
-      );
-      border-top: 1px solid var(--border);
-      backdrop-filter: blur(10px);
+      top: 16px;
+      align-self: start;
+      padding: 14px;
     }
     
+    .fixed-action-area {
+      position: static;
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      border-top: 0;
+      backdrop-filter: none;
+    }
+    
+    .fixed-action-area .btn-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 0;
+    }
+    
+    .fixed-action-area .btn-row + .btn-row {
+      margin-top: 12px;
+    }
+    
+    .fixed-action-area button {
+      width: 100%;
+      min-height: 58px;
+      font-size: 16px;
+      border-radius: 18px;
+    }
     .fixed-action-area .btn-row {
       margin-top: 0;
     }
@@ -364,11 +382,26 @@
         grid-column: auto;
       }
       
-      .fixed-action-area {
+      main { 
+        grid-template-columns: 1fr; 
+      }
+      
+      .action-panel {
         position: sticky;
         bottom: 0;
+        top: auto;
+        z-index: 30;
+        border-radius: 22px 22px 0 0;
       }
-      main { grid-template-columns: 1fr; }
+      
+      .fixed-action-area .btn-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+      
+      .fixed-action-area button {
+        min-height: 52px;
+      }
       .summary-cards { grid-template-columns: repeat(2, 1fr); }
       .member-list { max-height: none; min-height: 260px; }
     }
@@ -473,18 +506,6 @@
 
         <div class="section-title">LINE 預覽</div>
         <div class="preview-box" id="previewBox"></div>
-
-        <div class="fixed-action-area">
-        <div class="btn-row">
-          <button class="secondary-btn" onclick="loadMembers()">查詢會員</button>
-          <button class="primary-btn" onclick="sendSelectedCoupons()">發送給勾選會員</button>
-        </div>
-      
-        <div class="btn-row">
-          <button class="secondary-btn" onclick="saveSettings()">儲存設定</button>
-          <button class="danger-btn" onclick="clearSelected()">取消勾選</button>
-        </div>
-      </div>
       </div>
     </section>
 
@@ -520,6 +541,20 @@
         <div class="empty">請先查詢會員</div>
       </div>
     </section>
+
+    <aside class="panel action-panel">
+      <div class="fixed-action-area">
+        <div class="btn-row">
+          <button class="secondary-btn" onclick="loadMembers()">查詢會員</button>
+          <button class="primary-btn" onclick="sendSelectedCoupons()">發送給勾選會員</button>
+        </div>
+
+        <div class="btn-row">
+          <button class="secondary-btn" onclick="saveSettings()">儲存設定</button>
+          <button class="danger-btn" onclick="clearSelected()">取消勾選</button>
+        </div>
+      </div>
+    </aside>
   </main>
 
   <div id="toast" class="toast"></div>
