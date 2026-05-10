@@ -668,7 +668,7 @@
           return showToast(data.message || '查詢失敗');
         }
 
-        members = (data.members || []).map(normalizeMember);
+        members = (data.members || []).map((m, index) => normalizeMember(m, index));
         selectedKeys.clear();
         renderMembers();
         showToast('查詢完成，共 ' + members.length + ' 位');
@@ -680,13 +680,14 @@
       }
     }
 
-    function normalizeMember(m) {
+    function normalizeMember(m, index = 0) {
       const lineUserId = String(m.lineUserId || m.lineUserID || '').trim();
+      const phone = String(m.phone || m.customerPhone || '').trim();
     
       return {
-        key: lineUserId,
+        key: lineUserId || phone || ('member_' + index),
         name: m.name || m.customerName || '未命名',
-        phone: m.phone || m.customerPhone || '',
+        phone: phone,
         lineUserId: lineUserId,
         lineDisplayName: m.lineDisplayName || m.lineName || '',
         orderCount: Number(m.orderCount || m.count || 0),
@@ -746,7 +747,7 @@
       if (checked) {
         members
           .filter(m => m.lineUserId)
-          .forEach(m => selectedKeys.add(m.lineUserId));
+          .forEach(m => selectedKeys.add(m.key));
       }
     
       renderMembers();
