@@ -475,17 +475,53 @@
           </div>
         </div>
 
-        <div class="section-title">發送內容</div>
+       <div class="section-title">發送內容</div>
 
-        <div class="condition-grid">
-          <div class="field span-2">
-            <label>發送文字</label>
-            <textarea id="message" placeholder="例如：感謝支持好膽賣早，本週來店享飲品折扣 10 元！">感謝支持好膽賣早，本週來店享飲品折扣 10 元！</textarea>
-          </div>
+<div class="condition-grid">
+  <div class="field span-2">
+    <label>發送文字</label>
+    <textarea id="message" placeholder="例如：感謝支持好膽賣早，本週來店享飲品折扣 10 元！">感謝支持好膽賣早，本週來店享飲品折扣 10 元！</textarea>
+  </div>
+
+  <div class="field span-2">
+    <label>圖片網址，可空白</label>
+    <input id="imageUrl" placeholder="例如 https://你的圖片網址.jpg" />
+  </div>
+
+  <div class="field span-2">
+    <label style="display:flex; align-items:center; gap:8px; color:var(--text); font-size:14px;">
+      <input
+        id="enableCouponLink"
+        type="checkbox"
+        style="width:18px; height:18px; accent-color:var(--primary);"
+        onchange="toggleCouponLinkFields()"
+      />
+      加上優惠 / 兌換按鈕
+    </label>
+  </div>
+
+          <div id="couponLinkFields" class="span-2" style="display:none;">
+            <div class="condition-grid">
+              <div class="field span-2">
+                <label>優惠標題</label>
+                <input id="couponTitle" value="好膽賣早專屬優惠" />
+              </div>
         
-          <div class="field span-2">
-            <label>圖片網址，可空白</label>
-            <input id="imageUrl" placeholder="例如 https://你的圖片網址.jpg" />
+              <div class="field">
+                <label>按鈕文字</label>
+                <input id="buttonLabel" value="兌換優惠" />
+              </div>
+        
+              <div class="field">
+                <label>效期文字，可空白</label>
+                <input id="expireText" placeholder="例如 使用期限：2026/05/31 前" />
+              </div>
+        
+              <div class="field span-2">
+                <label>兌換頁網址 / LIFF URL</label>
+                <input id="redeemUrl" placeholder="例如 https://liff.line.me/你的LIFFID" />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -556,15 +592,42 @@
       document.getElementById('adminKey').value = saved.adminKey || 'crewcrew2026';
       document.getElementById('message').value = saved.message || '感謝支持好膽賣早，本週來店享飲品折扣 10 元！';
       document.getElementById('imageUrl').value = saved.imageUrl || '';
+      
+      document.getElementById('enableCouponLink').checked = !!saved.enableCouponLink;
+      document.getElementById('couponTitle').value = saved.couponTitle || '好膽賣早專屬優惠';
+      document.getElementById('buttonLabel').value = saved.buttonLabel || '兌換優惠';
+      document.getElementById('expireText').value = saved.expireText || '';
+      document.getElementById('redeemUrl').value = saved.redeemUrl || '';
+      
+      toggleCouponLinkFields();
       bindPreviewInputs();
       updatePreview();
       updateSummary();
     }
 
     function bindPreviewInputs() {
-      ['message','imageUrl'].forEach(id => {
-        document.getElementById(id).addEventListener('input', updatePreview);
-      });
+          [
+            'message',
+            'imageUrl',
+            'couponTitle',
+            'buttonLabel',
+            'expireText',
+            'redeemUrl'
+          ].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updatePreview);
+          });
+        
+          const enable = document.getElementById('enableCouponLink');
+          if (enable) enable.addEventListener('change', updatePreview);
+        }
+        function toggleCouponLinkFields() {
+      const enabled = document.getElementById('enableCouponLink').checked;
+      const box = document.getElementById('couponLinkFields');
+    
+      box.style.display = enabled ? 'block' : 'none';
+    
+      updatePreview();
     }
 
     function saveSettings() {
@@ -572,7 +635,13 @@
         apiUrl: val('apiUrl'),
         adminKey: val('adminKey'),
         message: val('message'),
-        imageUrl: val('imageUrl')
+        imageUrl: val('imageUrl'),
+      
+        enableCouponLink: document.getElementById('enableCouponLink').checked,
+        couponTitle: val('couponTitle'),
+        buttonLabel: val('buttonLabel'),
+        expireText: val('expireText'),
+        redeemUrl: val('redeemUrl')
       };
       localStorage.setItem('crewcrew_membership_settings', JSON.stringify(data));
       showToast('設定已儲存');
@@ -581,11 +650,30 @@
     function updatePreview() {
       const message = val('message') || '';
       const imageUrl = val('imageUrl') || '';
+      const enableCouponLink = document.getElementById('enableCouponLink')?.checked;
     
-      document.getElementById('previewBox').textContent =
+      const couponTitle = val('couponTitle') || '好膽賣早專屬優惠';
+      const buttonLabel = val('buttonLabel') || '兌換優惠';
+      const expireText = val('expireText') || '';
+      const redeemUrl = val('redeemUrl') || '';
+    
+      let text =
         '文字訊息：\n' +
         (message || '尚未輸入文字') +
         (imageUrl ? '\n\n圖片：\n' + imageUrl : '\n\n圖片：未設定');
+    
+      if (enableCouponLink) {
+        text +=
+          '\n\n優惠按鈕：已啟用' +
+          '\n標題：' + couponTitle +
+          '\n按鈕：' + buttonLabel +
+          (expireText ? '\n效期：' + expireText : '') +
+          '\n連結：' + (redeemUrl || '尚未輸入兌換網址');
+      } else {
+        text += '\n\n優惠按鈕：未啟用';
+      }
+    
+      document.getElementById('previewBox').textContent = text;
     }
 
     function buildQuery(mode, extra = {}) {
@@ -737,8 +825,14 @@
     async function sendSelectedCoupons() {
       if (!members.length) return showToast('請先查詢會員');
       if (!selectedKeys.size) return showToast('請先勾選要發送的會員');
-      if (!val('message') && !val('imageUrl')) {
-        return showToast('請至少輸入文字或圖片網址');
+      const enableCouponLink = document.getElementById('enableCouponLink').checked;
+
+      if (!val('message') && !val('imageUrl') && !enableCouponLink) {
+        return showToast('請至少輸入文字、圖片網址，或啟用優惠按鈕');
+      }
+      
+      if (enableCouponLink && !val('redeemUrl')) {
+        return showToast('已啟用優惠按鈕，請輸入兌換頁網址 / LIFF URL');
       }
 
       if (!confirm('確定要發送給 ' + selectedKeys.size + ' 位會員嗎？')) return;
@@ -751,6 +845,13 @@
         message: val('message'),
         imageUrl: val('imageUrl')
       };
+      
+      if (enableCouponLink) {
+        extra.couponTitle = val('couponTitle') || '好膽賣早專屬優惠';
+        extra.buttonLabel = val('buttonLabel') || '兌換優惠';
+        extra.expireText = val('expireText');
+        extra.redeemUrl = val('redeemUrl');
+      }
 
       try {
         showToast('發送中...');
