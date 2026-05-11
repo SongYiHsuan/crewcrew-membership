@@ -423,8 +423,8 @@
   <header>
     <div class="header-inner">
       <div>
-        <div class="brand-title">CrewCrew 會員優惠發送</div>
-        <div class="brand-subtitle">依累計金額、消費次數、單筆金額篩選會員，發送 LINE 優惠兌換按鈕</div>
+        <div class="brand-title">CrewCrew 會員訊息發送</div>
+        <div class="brand-subtitle">依累計金額、消費次數、單筆金額篩選會員，發送 LINE 文字或圖片訊息</div>
       </div>
       <div class="header-pill">crewcrew_membership</div>
     </div>
@@ -475,32 +475,17 @@
           </div>
         </div>
 
-        <div class="section-title">優惠訊息</div>
+        <div class="section-title">發送內容</div>
 
         <div class="condition-grid">
           <div class="field span-2">
-            <label>優惠標題</label>
-            <input id="couponTitle" value="好膽賣早專屬優惠" />
-          </div>
-        
-          <div class="field span-2">
             <label>發送文字</label>
-            <textarea id="message">感謝支持好膽賣早，本週憑此訊息享飲品折扣 10 元！</textarea>
-          </div>
-        
-          <div class="field">
-            <label>兌換按鈕文字</label>
-            <input id="buttonLabel" value="兌換優惠" />
-          </div>
-        
-          <div class="field">
-            <label>效期文字</label>
-            <input id="expireText" placeholder="例如 使用期限：2026/05/31 前" />
+            <textarea id="message" placeholder="例如：感謝支持好膽賣早，本週來店享飲品折扣 10 元！">感謝支持好膽賣早，本週來店享飲品折扣 10 元！</textarea>
           </div>
         
           <div class="field span-2">
-            <label>兌換頁網址 / LIFF URL</label>
-            <input id="redeemUrl" placeholder="例如 https://liff.line.me/你的LIFFID 或 GitHub Pages 兌換頁" />
+            <label>圖片網址，可空白</label>
+            <input id="imageUrl" placeholder="例如 https://你的圖片網址.jpg" />
           </div>
         </div>
 
@@ -569,18 +554,15 @@
       const saved = JSON.parse(localStorage.getItem('crewcrew_membership_settings') || '{}');
       document.getElementById('apiUrl').value = saved.apiUrl || DEFAULT_API_URL;
       document.getElementById('adminKey').value = saved.adminKey || 'crewcrew2026';
-      document.getElementById('redeemUrl').value = saved.redeemUrl || '';
-      document.getElementById('couponTitle').value = saved.couponTitle || '好膽賣早專屬優惠';
-      document.getElementById('buttonLabel').value = saved.buttonLabel || '兌換優惠';
-      document.getElementById('expireText').value = saved.expireText || '';
-      document.getElementById('message').value = saved.message || '感謝支持好膽賣早，本週憑此訊息享飲品折扣 10 元！';
+      document.getElementById('message').value = saved.message || '感謝支持好膽賣早，本週來店享飲品折扣 10 元！';
+      document.getElementById('imageUrl').value = saved.imageUrl || '';
       bindPreviewInputs();
       updatePreview();
       updateSummary();
     }
 
     function bindPreviewInputs() {
-      ['couponTitle','message','buttonLabel','expireText','redeemUrl'].forEach(id => {
+      ['message','imageUrl'].forEach(id => {
         document.getElementById(id).addEventListener('input', updatePreview);
       });
     }
@@ -589,27 +571,21 @@
       const data = {
         apiUrl: val('apiUrl'),
         adminKey: val('adminKey'),
-        redeemUrl: val('redeemUrl'),
-        couponTitle: val('couponTitle'),
-        buttonLabel: val('buttonLabel'),
-        expireText: val('expireText'),
-        message: val('message')
+        message: val('message'),
+        imageUrl: val('imageUrl')
       };
       localStorage.setItem('crewcrew_membership_settings', JSON.stringify(data));
       showToast('設定已儲存');
     }
 
     function updatePreview() {
-      const title = val('couponTitle') || '好膽賣早專屬優惠';
       const message = val('message') || '';
-      const expire = val('expireText') || '';
-      const button = val('buttonLabel') || '兌換優惠';
+      const imageUrl = val('imageUrl') || '';
     
       document.getElementById('previewBox').textContent =
-        title + '\n\n' +
-        message +
-        (expire ? '\n\n' + expire : '') +
-        '\n\n[' + button + ']';
+        '文字訊息：\n' +
+        (message || '尚未輸入文字') +
+        (imageUrl ? '\n\n圖片：\n' + imageUrl : '\n\n圖片：未設定');
     }
 
     function buildQuery(mode, extra = {}) {
@@ -761,8 +737,9 @@
     async function sendSelectedCoupons() {
       if (!members.length) return showToast('請先查詢會員');
       if (!selectedKeys.size) return showToast('請先勾選要發送的會員');
-      if (!val('message')) return showToast('請輸入優惠訊息');
-      if (!val('redeemUrl')) return showToast('請輸入兌換頁網址 / LIFF URL');
+      if (!val('message') && !val('imageUrl')) {
+        return showToast('請至少輸入文字或圖片網址');
+      }
 
       if (!confirm('確定要發送給 ' + selectedKeys.size + ' 位會員嗎？')) return;
 
@@ -772,10 +749,7 @@
       const extra = {
         memberKeys,
         message: val('message'),
-        couponTitle: val('couponTitle'),
-        buttonLabel: val('buttonLabel'),
-        redeemUrl: val('redeemUrl'),
-        expireText: val('expireText')
+        imageUrl: val('imageUrl')
       };
 
       try {
